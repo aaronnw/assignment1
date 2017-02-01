@@ -1,10 +1,12 @@
 package hci;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.FileFilter;
 
 /**
  * Created by Aaron on 1/27/2017.
@@ -25,11 +27,15 @@ public class PictureFrame extends JFrame {
         private JLabel directoryLabel;
         private JFileChooser chooser;
         private File directory;
+        private File[] imageList;
+        private FileFilter filter;
         private JLabel imageLabel;
         private ImageIcon icon;
         private ImageIcon scaledImage;
         private int index = 0;
-        private int numFiles;
+        private int numFiles = 0;
+        //TODO use file filter
+        //imageio
 
         public PictureFrame() {
             initializeComponents();
@@ -59,8 +65,7 @@ public class PictureFrame extends JFrame {
             }else{
                 index = numFiles -1;
             }
-            icon = new ImageIcon(directory.listFiles()[index].getAbsolutePath());
-            imageLabel.setIcon(icon);
+            setImage();
         }
         public void nextImage(){
             //Loops if the last imageLabel in the folder is reached
@@ -69,15 +74,20 @@ public class PictureFrame extends JFrame {
             }else{
                 index = 0;
             }
-            icon = new ImageIcon(directory.listFiles()[index].getAbsolutePath());
-            imageLabel.setIcon(icon);
+            setImage();
+        }
+        public void setImage(){
+            if (directory!=null && numFiles >0) {
+                icon = new ImageIcon(directory.listFiles()[index].getAbsolutePath());
+                imageLabel.setIcon(scaleImage(icon));
+            }
         }
         public void initializeComponents(){
             directoryLabel = new JLabel("No directory selected");
             mFile = new JMenu("File");
             mItemSelect = new JMenuItem("Select folder");
-            mItemNext = new JMenuItem("Next imageLabel");
-            mItemPrevious = new JMenuItem("Previous imageLabel");
+            mItemNext = new JMenuItem("Next image");
+            mItemPrevious = new JMenuItem("Previous image");
             mItemExit = new JMenuItem("Exit");
             chooser = new JFileChooser();
             menuBar = new JMenuBar();
@@ -93,9 +103,12 @@ public class PictureFrame extends JFrame {
             imageLabel = new JLabel("");
             icon = new ImageIcon();
         }
-        public void scaleImage(){
-            scaledImage = new ImageIcon(icon.getImage().getScaledInstance(picPanel.getWidth(), picPanel.getHeight(), Image.SCALE_FAST));
-            imageLabel.setIcon(scaledImage);
+        public ImageIcon scaleImage(ImageIcon old){
+            if(old.getImage() != null) {
+                scaledImage = new ImageIcon(old.getImage().getScaledInstance(picPanel.getWidth(), picPanel.getHeight(), Image.SCALE_FAST));
+                return scaledImage;
+            }
+            return null;
         }
         public void setListeners(){
             mItemExit.addActionListener(new ActionListener() {
@@ -109,11 +122,18 @@ public class PictureFrame extends JFrame {
                 public void actionPerformed(ActionEvent e) {
                     chooser.showOpenDialog(mItemSelect);
                     directory = chooser.getSelectedFile();
+                    imageList = directory.listFiles(new FileFilter() {
+                        @Override
+                        public boolean accept(File pathname) {
+                            //Check each file for valid suffixes
+                            ImageIO.getReaderFileSuffixes()
+                            return false;
+                        }
+                    });
                     directoryLabel.setText(directory.getPath());
-                    numFiles = directory.listFiles().length;
-                    icon = new ImageIcon(directory.listFiles()[index].getAbsolutePath());
+                    numFiles = imageList.length;
                     imageLabel.setText("");
-                    imageLabel.setIcon(icon);
+                    setImage();
                 }
             });
             bPrevious.addActionListener(new ActionListener() {
@@ -134,11 +154,15 @@ public class PictureFrame extends JFrame {
                     nextImage();
                 }
             });
+            mItemPrevious.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    previousImage();
+                }
+            });
             imageLabel.addComponentListener(new ComponentAdapter() {
                 public void componentResized(ComponentEvent e) {
-                    if(icon.getImage() != null) {
-                        scaleImage();
-                    }
+                        scaleImage(icon);
                 }
             });
             imageLabel.addMouseWheelListener(new MouseWheelListener() {
@@ -177,6 +201,8 @@ public class PictureFrame extends JFrame {
 
                 }
             });
+            mItemNext.setAccelerator(KeyStroke.getKeyStroke(39, 0));
+            mItemPrevious.setAccelerator(KeyStroke.getKeyStroke(37, 0));
 
         }
 }
