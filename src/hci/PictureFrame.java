@@ -1,11 +1,9 @@
 package hci;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.io.File;
 
 /**
@@ -13,42 +11,93 @@ import java.io.File;
  */
 public class PictureFrame extends JFrame {
         private JPanel contentPane = new JPanel();
-        JPanel picPanel;
-        JPanel bottomPanel;
-        JMenuBar menuBar;
-        JMenu mFile;
-        JMenuItem mItemSelect;
-        JMenuItem mItemNext;
-        JMenuItem mItemPrevious;
-        JMenuItem mItemExit;
-        JButton bNext;
-        JLabel directoryLabel;
-        JFileChooser chooser;
-        File directory;
+        private JPanel picPanel;
+        private JPanel bottomPanel;
+        private JPanel controlPanel;
+        private JMenuBar menuBar;
+        private JMenu mFile;
+        private JMenuItem mItemSelect;
+        private JMenuItem mItemNext;
+        private JMenuItem mItemPrevious;
+        private JMenuItem mItemExit;
+        private JButton bPrevious;
+        private JButton bNext;
+        private JLabel directoryLabel;
+        private JFileChooser chooser;
+        private File directory;
+        private JLabel imageLabel;
+        private ImageIcon icon;
+        private ImageIcon scaledImage;
+        private int index = 0;
+        private int numFiles;
 
         public PictureFrame() {
-            directoryLabel = new JLabel("No directory selected");
-            mFile = new JMenu("File");
-            mItemSelect = new JMenuItem("Select folder");
-            mItemNext = new JMenuItem("Next image");
-            mItemPrevious = new JMenuItem("Previous image");
-            mItemExit = new JMenuItem("Exit");
-            chooser = new JFileChooser();
+            initializeComponents();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             mFile.add(mItemSelect);
             mFile.add(mItemNext);
             mFile.add(mItemPrevious);
             mFile.add(mItemExit);
-            menuBar = new JMenuBar();
             menuBar.add(mFile);
             setJMenuBar(menuBar);
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            bottomPanel = new JPanel();
-            bNext = new JButton("Next");
-            bottomPanel.add(bNext);
+            controlPanel.add(bPrevious);
+            controlPanel.add(bNext);
+            bottomPanel.add(controlPanel);
             bottomPanel.add(directoryLabel);
+            imageLabel.setText("No images in directory");
+            picPanel.add(imageLabel);
+            contentPane.add(picPanel, BorderLayout.CENTER);
+            contentPane.add(bottomPanel, BorderLayout.SOUTH);
+            setListeners();
+            this.setContentPane(contentPane);
+            this.pack();
+        }
+        public void previousImage(){
+            if(index > 0){
+                index --;
+            }else{
+                index = numFiles -1;
+            }
+            icon = new ImageIcon(directory.listFiles()[index].getAbsolutePath());
+            imageLabel.setIcon(icon);
+        }
+        public void nextImage(){
+            //Loops if the last imageLabel in the folder is reached
+            if(index < numFiles-1) {
+                index++;
+            }else{
+                index = 0;
+            }
+            icon = new ImageIcon(directory.listFiles()[index].getAbsolutePath());
+            imageLabel.setIcon(icon);
+        }
+        public void initializeComponents(){
+            directoryLabel = new JLabel("No directory selected");
+            mFile = new JMenu("File");
+            mItemSelect = new JMenuItem("Select folder");
+            mItemNext = new JMenuItem("Next imageLabel");
+            mItemPrevious = new JMenuItem("Previous imageLabel");
+            mItemExit = new JMenuItem("Exit");
+            chooser = new JFileChooser();
+            menuBar = new JMenuBar();
+            bottomPanel = new JPanel();
+            bPrevious = new JButton("Previous");
+            bNext = new JButton("Next");
             bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
             picPanel = new JPanel();
+            controlPanel = new JPanel();
+            contentPane = new JPanel();
+            contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+            contentPane.setLayout(new BorderLayout(0, 0));
+            imageLabel = new JLabel("");
+            icon = new ImageIcon();
+        }
+        public void scaleImage(){
+            scaledImage = new ImageIcon(icon.getImage().getScaledInstance(picPanel.getWidth(), picPanel.getHeight(), Image.SCALE_FAST));
+            imageLabel.setIcon(scaledImage);
+        }
+        public void setListeners(){
             mItemExit.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -61,15 +110,73 @@ public class PictureFrame extends JFrame {
                     chooser.showOpenDialog(mItemSelect);
                     directory = chooser.getSelectedFile();
                     directoryLabel.setText(directory.getPath());
+                    numFiles = directory.listFiles().length;
+                    icon = new ImageIcon(directory.listFiles()[index].getAbsolutePath());
+                    imageLabel.setText("");
+                    imageLabel.setIcon(icon);
+                }
+            });
+            bPrevious.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    previousImage();
+                }
+            });
+            bNext.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    nextImage();
+                }
+            });
+            mItemNext.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    nextImage();
+                }
+            });
+            imageLabel.addComponentListener(new ComponentAdapter() {
+                public void componentResized(ComponentEvent e) {
+                    if(icon.getImage() != null) {
+                        scaleImage();
+                    }
+                }
+            });
+            imageLabel.addMouseWheelListener(new MouseWheelListener() {
+                @Override
+                public void mouseWheelMoved(MouseWheelEvent e) {
+                    if(e.getWheelRotation() > 0) {
+                        nextImage();
+                    }else{
+                        previousImage();
+                    }
+                }
+            });
+            imageLabel.addMouseListener(new MouseListener() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    nextImage();
+                }
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+
                 }
             });
 
-            contentPane = new JPanel();
-            contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-            contentPane.setLayout(new BorderLayout(0, 0));
-            setContentPane(contentPane);
-            contentPane.add(picPanel, BorderLayout.CENTER);
-            contentPane.add(bottomPanel, BorderLayout.SOUTH);
-            this.pack();
         }
 }
