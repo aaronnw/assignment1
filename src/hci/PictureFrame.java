@@ -32,11 +32,9 @@ public class PictureFrame extends JFrame {
         private JLabel imageLabel;
         private ImageIcon icon;
         private ImageIcon scaledImage;
+        private final String[] validextensions = ImageIO.getReaderFileSuffixes();
         private int index = 0;
         private int numFiles = 0;
-        //TODO use file filter
-        //imageio
-
         public PictureFrame() {
             initializeComponents();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -78,7 +76,7 @@ public class PictureFrame extends JFrame {
         }
         public void setImage(){
             if (directory!=null && numFiles >0) {
-                icon = new ImageIcon(directory.listFiles()[index].getAbsolutePath());
+                icon = new ImageIcon(imageList[index].getAbsolutePath());
                 imageLabel.setIcon(scaleImage(icon));
             }
         }
@@ -110,6 +108,13 @@ public class PictureFrame extends JFrame {
             }
             return null;
         }
+        public String getExtension(File f){
+            String name = f.toString();
+            if(!name.contains(".")){
+                return null;
+            }
+            return name.substring(name.lastIndexOf(".") +1);
+        }
         public void setListeners(){
             mItemExit.addActionListener(new ActionListener() {
                 @Override
@@ -125,8 +130,13 @@ public class PictureFrame extends JFrame {
                     imageList = directory.listFiles(new FileFilter() {
                         @Override
                         public boolean accept(File pathname) {
-                            //Check each file for valid suffixes
-                            ImageIO.getReaderFileSuffixes()
+                            String extension = getExtension(pathname);
+                            //Check if the extension is in the valid list
+                            for(String validext:validextensions){
+                                if(validext.equals(extension)){
+                                    return true;
+                                }
+                            }
                             return false;
                         }
                     });
@@ -162,7 +172,8 @@ public class PictureFrame extends JFrame {
             });
             imageLabel.addComponentListener(new ComponentAdapter() {
                 public void componentResized(ComponentEvent e) {
-                        scaleImage(icon);
+                        ImageIcon newIcon = scaleImage(icon);
+                        imageLabel.setIcon(newIcon);
                 }
             });
             imageLabel.addMouseWheelListener(new MouseWheelListener() {
