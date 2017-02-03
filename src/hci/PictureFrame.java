@@ -94,6 +94,7 @@ public class PictureFrame extends JFrame {
             bNext = new JButton("Next");
             bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
             picPanel = new JPanel();
+            picPanel.setLayout(new CardLayout(0,0));
             controlPanel = new JPanel();
             contentPane = new JPanel();
             contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -172,6 +173,7 @@ public class PictureFrame extends JFrame {
             });
             imageLabel.addComponentListener(new ComponentAdapter() {
                 public void componentResized(ComponentEvent e) {
+                    System.out.println("resized");
                         ImageIcon newIcon = scaleImage(icon);
                         imageLabel.setIcon(newIcon);
                 }
