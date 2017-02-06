@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.FileFilter;
+import java.sql.Time;
 
 /**
  * Created by Aaron on 1/27/2017.
@@ -35,6 +36,7 @@ public class PictureFrame extends JFrame {
         private final String[] validextensions = ImageIO.getReaderFileSuffixes();
         private int index = 0;
         private int numFiles = 0;
+
         public PictureFrame() {
             initializeComponents();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -50,7 +52,7 @@ public class PictureFrame extends JFrame {
             bottomPanel.add(controlPanel);
             bottomPanel.add(directoryLabel);
             imageLabel.setText("No images in directory");
-            picPanel.add(imageLabel);
+            picPanel.add(imageLabel, BorderLayout.CENTER);
             contentPane.add(picPanel, BorderLayout.CENTER);
             contentPane.add(bottomPanel, BorderLayout.SOUTH);
             setListeners();
@@ -77,6 +79,7 @@ public class PictureFrame extends JFrame {
         public void setImage(){
             if (directory!=null && numFiles >0) {
                 icon = new ImageIcon(imageList[index].getAbsolutePath());
+                imageLabel.setText("");
                 imageLabel.setIcon(scaleImage(icon));
             }
         }
@@ -94,7 +97,7 @@ public class PictureFrame extends JFrame {
             bNext = new JButton("Next");
             bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
             picPanel = new JPanel();
-            picPanel.setLayout(new CardLayout(0,0));
+            picPanel.setLayout(new CardLayout());
             controlPanel = new JPanel();
             contentPane = new JPanel();
             contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -143,7 +146,6 @@ public class PictureFrame extends JFrame {
                     });
                     directoryLabel.setText(directory.getPath());
                     numFiles = imageList.length;
-                    imageLabel.setText("");
                     setImage();
                 }
             });
@@ -173,7 +175,6 @@ public class PictureFrame extends JFrame {
             });
             imageLabel.addComponentListener(new ComponentAdapter() {
                 public void componentResized(ComponentEvent e) {
-                    System.out.println("resized");
                         ImageIcon newIcon = scaleImage(icon);
                         imageLabel.setIcon(newIcon);
                 }
@@ -181,11 +182,12 @@ public class PictureFrame extends JFrame {
             imageLabel.addMouseWheelListener(new MouseWheelListener() {
                 @Override
                 public void mouseWheelMoved(MouseWheelEvent e) {
-                    if(e.getWheelRotation() > 0) {
-                        nextImage();
-                    }else{
-                        previousImage();
-                    }
+                            if(e.getWheelRotation() > 0) {
+                                nextImage();
+                            }else{
+                                previousImage();
+                            }
+
                 }
             });
             imageLabel.addMouseListener(new MouseListener() {
