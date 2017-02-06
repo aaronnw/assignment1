@@ -107,7 +107,12 @@ public class PictureFrame extends JFrame {
         }
         public ImageIcon scaleImage(ImageIcon old){
             if(old.getImage() != null) {
-                scaledImage = new ImageIcon(old.getImage().getScaledInstance(picPanel.getWidth(), picPanel.getHeight(), Image.SCALE_FAST));
+                double oldWidth = old.getIconWidth();
+                double oldHeight = old.getIconHeight();
+                double ratio = oldWidth/oldHeight;
+                double width  = Math.min(picPanel.getWidth(), picPanel.getHeight()*ratio);
+                double height = Math.min(picPanel.getHeight(), picPanel.getWidth()/ratio);
+                scaledImage = new ImageIcon(old.getImage().getScaledInstance((int)width, (int)height, Image.SCALE_FAST));
                 return scaledImage;
             }
             return null;
