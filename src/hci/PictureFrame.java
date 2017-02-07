@@ -7,7 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.FileFilter;
-import java.sql.Time;
+import java.io.IOException;
 
 /**
  * Created by Aaron on 1/27/2017.
@@ -25,17 +25,20 @@ public class PictureFrame extends JFrame {
         private JMenuItem mItemExit;
         private JButton bPrevious;
         private JButton bNext;
+        private JButton bSS;
         private JLabel directoryLabel;
         private JFileChooser chooser;
         private File directory;
         private File[] imageList;
-        private FileFilter filter;
         private JLabel imageLabel;
         private ImageIcon icon;
         private ImageIcon scaledImage;
         private final String[] validextensions = ImageIO.getReaderFileSuffixes();
         private int index = 0;
         private int numFiles = 0;
+        long delay = 0;
+        Timer ssTimer;
+        int prevWindowState;
 
         public PictureFrame() {
             initializeComponents();
@@ -48,10 +51,11 @@ public class PictureFrame extends JFrame {
             setJMenuBar(menuBar);
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             controlPanel.add(bPrevious);
+            controlPanel.add(bSS);
             controlPanel.add(bNext);
             bottomPanel.add(controlPanel);
             bottomPanel.add(directoryLabel);
-            imageLabel.setText("No images in directory");
+            imageLabel.setText("Use the File menu to select a directory with image files");
             picPanel.add(imageLabel, BorderLayout.CENTER);
             contentPane.add(picPanel, BorderLayout.CENTER);
             contentPane.add(bottomPanel, BorderLayout.SOUTH);
@@ -83,6 +87,20 @@ public class PictureFrame extends JFrame {
                 imageLabel.setIcon(scaleImage(icon));
             }
         }
+        public void startSlideshow(){
+            if(imageLabel.getIcon() != null) {
+                prevWindowState = this.getExtendedState();
+                this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                ssTimer.start();
+            }
+
+        }
+        public void stopSlideshow(){
+                if(ssTimer.isRunning()){
+                    this.setExtendedState(prevWindowState);
+                    ssTimer.stop();
+                }
+        }
         public void initializeComponents(){
             directoryLabel = new JLabel("No directory selected");
             mFile = new JMenu("File");
@@ -94,6 +112,7 @@ public class PictureFrame extends JFrame {
             menuBar = new JMenuBar();
             bottomPanel = new JPanel();
             bPrevious = new JButton("Previous");
+            bSS = new JButton("Slideshow");
             bNext = new JButton("Next");
             bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
             picPanel = new JPanel();
@@ -104,6 +123,12 @@ public class PictureFrame extends JFrame {
             contentPane.setLayout(new BorderLayout(0, 0));
             imageLabel = new JLabel("");
             icon = new ImageIcon();
+            ssTimer = new Timer(2000, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    nextImage();
+                }
+            });
         }
         public ImageIcon scaleImage(ImageIcon old){
             if(old.getImage() != null) {
@@ -166,6 +191,12 @@ public class PictureFrame extends JFrame {
                     nextImage();
                 }
             });
+            bSS.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    startSlideshow();
+                }
+            });
             mItemNext.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -187,17 +218,25 @@ public class PictureFrame extends JFrame {
             imageLabel.addMouseWheelListener(new MouseWheelListener() {
                 @Override
                 public void mouseWheelMoved(MouseWheelEvent e) {
-                            if(e.getWheelRotation() > 0) {
-                                nextImage();
-                            }else{
-                                previousImage();
-                            }
-
+                    //If time since the last movement is >500 ms
+                    if(delay != 0 && (System.currentTimeMillis() - delay <500)){
+                        return;
+                    }
+                        if (e.getWheelRotation() > 0) {
+                            nextImage();
+                        } else {
+                            previousImage();
+                        }
+                        delay = System.currentTimeMillis();
                 }
             });
             imageLabel.addMouseListener(new MouseListener() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
+                    if(ssTimer.isRunning()){
+                        stopSlideshow();
+                        return;
+                    }
                     nextImage();
                 }
 
@@ -223,6 +262,14 @@ public class PictureFrame extends JFrame {
             });
             mItemNext.setAccelerator(KeyStroke.getKeyStroke(39, 0));
             mItemPrevious.setAccelerator(KeyStroke.getKeyStroke(37, 0));
-
+            this.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    stopSlideshow();
+                }
+            });
         }
+
+
 }
+
