@@ -7,12 +7,13 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
 
 /**
- * Created by Aaron on 1/27/2017.
+ * Created by Aaron on 1/27/2017
+ * HCI 2017 Assignment 1
+ * Java Swing implementation of Photo Viewer
  */
-public class PictureFrame extends JFrame {
+class PictureFrame extends JFrame {
         private JPanel contentPane = new JPanel();
         private JPanel picPanel;
         private JPanel bottomPanel;
@@ -32,15 +33,14 @@ public class PictureFrame extends JFrame {
         private File[] imageList;
         private JLabel imageLabel;
         private ImageIcon icon;
-        private ImageIcon scaledImage;
         private final String[] validextensions = ImageIO.getReaderFileSuffixes();
         private int index = 0;
         private int numFiles = 0;
-        long delay = 0;
-        Timer ssTimer;
-        int prevWindowState;
-
-        public PictureFrame() {
+        private long delay = 0;
+        private Timer ssTimer;
+        private int prevWindowState;
+        //Create the frame and add the components
+        PictureFrame() {
             initializeComponents();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             mFile.add(mItemSelect);
@@ -49,7 +49,7 @@ public class PictureFrame extends JFrame {
             mFile.add(mItemExit);
             menuBar.add(mFile);
             setJMenuBar(menuBar);
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             controlPanel.add(bPrevious);
             controlPanel.add(bSS);
             controlPanel.add(bNext);
@@ -63,31 +63,38 @@ public class PictureFrame extends JFrame {
             this.setContentPane(contentPane);
             this.pack();
         }
-        public void previousImage(){
-            if(index > 0){
-                index --;
-            }else{
-                index = numFiles -1;
+        /*Shifts the index and loads the previous image*/
+        private void previousImage(){
+            if(imageLabel.getIcon()!=null) {
+                if (index > 0) {
+                    index--;
+                } else {
+                    index = numFiles - 1;
+                }
+                setImage();
             }
-            setImage();
         }
-        public void nextImage(){
-            //Loops if the last imageLabel in the folder is reached
-            if(index < numFiles-1) {
-                index++;
-            }else{
-                index = 0;
+        /*Shifts the index and loads the next image*/
+        private void nextImage(){
+            if(imageLabel.getIcon()!=null) {
+                if (index < numFiles - 1) {
+                    index++;
+                } else {
+                    index = 0;
+                }
+                setImage();
             }
-            setImage();
         }
-        public void setImage(){
+        /*Check for valid image files in the directory and set them to the label*/
+        private void setImage(){
             if (directory!=null && numFiles >0) {
                 icon = new ImageIcon(imageList[index].getAbsolutePath());
                 imageLabel.setText("");
                 imageLabel.setIcon(scaleImage(icon));
             }
         }
-        public void startSlideshow(){
+        /*Make the frame full-screen and start the slideshow timer*/
+        private void startSlideshow(){
             if(imageLabel.getIcon() != null) {
                 prevWindowState = this.getExtendedState();
                 this.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -95,13 +102,15 @@ public class PictureFrame extends JFrame {
             }
 
         }
-        public void stopSlideshow(){
+        /*Stop the slide-show timer and revert the previous frame size*/
+        private void stopSlideshow(){
                 if(ssTimer.isRunning()){
                     this.setExtendedState(prevWindowState);
                     ssTimer.stop();
                 }
         }
-        public void initializeComponents(){
+        /*Set up the components*/
+        private void initializeComponents(){
             directoryLabel = new JLabel("No directory selected");
             mFile = new JMenu("File");
             mItemSelect = new JMenuItem("Select folder");
@@ -112,7 +121,7 @@ public class PictureFrame extends JFrame {
             menuBar = new JMenuBar();
             bottomPanel = new JPanel();
             bPrevious = new JButton("Previous");
-            bSS = new JButton("Slideshow");
+            bSS = new JButton("Slide-show");
             bNext = new JButton("Next");
             bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
             picPanel = new JPanel();
@@ -130,26 +139,32 @@ public class PictureFrame extends JFrame {
                 }
             });
         }
-        public ImageIcon scaleImage(ImageIcon old){
+        /*Scale the image and retain the aspect ratio*/
+        private ImageIcon scaleImage(ImageIcon old){
             if(old.getImage() != null) {
+                //Get the original dimensions
                 double oldWidth = old.getIconWidth();
                 double oldHeight = old.getIconHeight();
+                //Find the aspect ratio
                 double ratio = oldWidth/oldHeight;
+                //Set the new width and height based on the ratio
                 double width  = Math.min(picPanel.getWidth(), picPanel.getHeight()*ratio);
                 double height = Math.min(picPanel.getHeight(), picPanel.getWidth()/ratio);
-                scaledImage = new ImageIcon(old.getImage().getScaledInstance((int)width, (int)height, Image.SCALE_FAST));
-                return scaledImage;
+                return new ImageIcon(old.getImage().getScaledInstance((int) width, (int) height, Image.SCALE_FAST));
+
             }
             return null;
         }
-        public String getExtension(File f){
+        /*Returns the extension of a given file*/
+        private String getExtension(File f){
             String name = f.toString();
             if(!name.contains(".")){
                 return null;
             }
             return name.substring(name.lastIndexOf(".") +1);
         }
-        public void setListeners(){
+        /*Set up listeners to for the user to interact with the components*/
+        private void setListeners(){
             mItemExit.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -176,6 +191,7 @@ public class PictureFrame extends JFrame {
                     });
                     directoryLabel.setText(directory.getPath());
                     numFiles = imageList.length;
+                    index = 0;
                     setImage();
                 }
             });
@@ -200,12 +216,14 @@ public class PictureFrame extends JFrame {
             mItemNext.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    stopSlideshow();
                     nextImage();
                 }
             });
             mItemPrevious.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    stopSlideshow();
                     previousImage();
                 }
             });
@@ -218,8 +236,10 @@ public class PictureFrame extends JFrame {
             imageLabel.addMouseWheelListener(new MouseWheelListener() {
                 @Override
                 public void mouseWheelMoved(MouseWheelEvent e) {
-                    //If time since the last movement is >500 ms
-                    if(delay != 0 && (System.currentTimeMillis() - delay <500)){
+                    /*If time since the last movement is >800 ms
+                        Prevents scrolling too fast on a touch-pad
+                     */
+                    if(delay != 0 && (System.currentTimeMillis() - delay <800)){
                         return;
                     }
                         if (e.getWheelRotation() > 0) {
@@ -260,6 +280,7 @@ public class PictureFrame extends JFrame {
 
                 }
             });
+            //Set accelerators for the right and left arrows to trigger the menu items
             mItemNext.setAccelerator(KeyStroke.getKeyStroke(39, 0));
             mItemPrevious.setAccelerator(KeyStroke.getKeyStroke(37, 0));
             this.addMouseListener(new MouseAdapter() {
